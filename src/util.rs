@@ -207,7 +207,8 @@ pub unsafe fn pop_error(state: *mut ffi::lua_State, err_code: c_int) -> Error {
                 // instead of failing.
                 rlua_abort!("impossible Lua allocation error")
             }
-            ffi::LUA_ERRGCMM => Error::GarbageCollectorError(err_string),
+            // XXX(LuaJIT): This isn't present
+            //ffi::LUA_ERRGCMM => Error::GarbageCollectorError(err_string),
             _ => rlua_panic!("unrecognized lua error code"),
         }
     }
@@ -402,10 +403,13 @@ pub unsafe extern "C" fn safe_xpcall(state: *mut ffi::lua_State) -> c_int {
 
 // Does not call lua_checkstack, uses 1 stack space.
 pub unsafe fn main_state(state: *mut ffi::lua_State) -> *mut ffi::lua_State {
-    ffi::lua_rawgeti(state, ffi::LUA_REGISTRYINDEX, ffi::LUA_RIDX_MAINTHREAD);
-    let main_state = ffi::lua_tothread(state, -1);
-    ffi::lua_pop(state, 1);
-    main_state
+    // XXX(LuaJIT): Can't find main thread `lua_State` in LuaJIT...
+    // TODO: Figure out a way to do this for LuaJIT
+    //ffi::lua_rawgeti(state, ffi::LUA_REGISTRYINDEX, ffi::LUA_RIDX_MAINTHREAD);
+    //let main_state = ffi::lua_tothread(state, -1);
+    //ffi::lua_pop(state, 1);
+    //main_state
+    state
 }
 
 // Pushes a WrappedError::Error to the top of the stack.  Uses two stack spaces and does not call

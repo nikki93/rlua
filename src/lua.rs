@@ -320,7 +320,9 @@ impl Lua {
         unsafe {
             let _sg = StackGuard::new(self.state);
             assert_stack(self.state, 2);
-            ffi::lua_rawgeti(self.state, ffi::LUA_REGISTRYINDEX, ffi::LUA_RIDX_GLOBALS);
+            // XXX(LuaJIT): No `ffi:LUA_RIDX_GLOBALS`
+            //ffi::lua_rawgeti(self.state, ffi::LUA_REGISTRYINDEX, ffi::LUA_RIDX_GLOBALS);
+            ffi::lua_getfield(self.state, ffi::LUA_GLOBALSINDEX, cstr!("_G"));
             Table(self.pop_ref())
         }
     }
@@ -1067,7 +1069,9 @@ unsafe fn create_lua(load_debug: bool) -> Lua {
 
     // Override pcall and xpcall with versions that cannot be used to catch rust panics.
 
-    ffi::lua_rawgeti(state, ffi::LUA_REGISTRYINDEX, ffi::LUA_RIDX_GLOBALS);
+    // XXX(LuaJIT): No `ffi:LUA_RIDX_GLOBALS`
+    //ffi::lua_rawgeti(state, ffi::LUA_REGISTRYINDEX, ffi::LUA_RIDX_GLOBALS);
+    ffi::lua_getfield(state, ffi::LUA_GLOBALSINDEX, cstr!("_G"));
 
     push_string(state, "pcall").unwrap();
     ffi::lua_pushcfunction(state, safe_pcall);

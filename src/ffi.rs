@@ -6,7 +6,7 @@ use std::ptr;
 use std::mem;
 use std::os::raw::{c_char, c_double, c_int, c_longlong, c_uchar, c_void};
 
-pub type lua_Integer = c_longlong;
+pub type lua_Integer = c_longlong; // XXX(LuaJIT): Is this compatible?
 pub type lua_Number = c_double;
 
 pub enum lua_State {}
@@ -26,12 +26,14 @@ pub struct lua_Debug {
     pub what: *const c_char,
     pub source: *const c_char,
     pub currentline: c_int,
+    // XXX(LuaJIT): `nups` comes before `linedefined`
+    pub nups: c_int,
     pub linedefined: c_int,
     pub lastlinedefined: c_int,
-    pub nups: c_uchar,
-    pub nparams: c_uchar,
-    pub isvararg: c_char,
-    pub istailcall: c_char,
+    // XXX(LuaJIT): These aren't present
+    //pub nparams: c_uchar,
+    //pub isvararg: c_char,
+    //pub istailcall: c_char,
     pub short_src: [c_char; LUA_IDSIZE as usize],
     i_ci: *mut c_void,
 }
@@ -41,17 +43,20 @@ pub const LUA_YIELD: c_int = 1;
 pub const LUA_ERRRUN: c_int = 2;
 pub const LUA_ERRSYNTAX: c_int = 3;
 pub const LUA_ERRMEM: c_int = 4;
-pub const LUA_ERRGCMM: c_int = 5;
-pub const LUA_ERRERR: c_int = 6;
+// XXX(LuaJIT): This isn't present
+//pub const LUA_ERRGCMM: c_int = 5;
+pub const LUA_ERRERR: c_int = 5; // XXX(LuaJIT)
 
 pub const LUA_NOREF: c_int = -2;
 pub const LUA_REFNIL: c_int = -1;
 
 pub const LUA_MULTRET: c_int = -1;
-pub const LUAI_MAXSTACK: c_int = 1_000_000;
-pub const LUA_REGISTRYINDEX: c_int = -LUAI_MAXSTACK - 1000;
-pub const LUA_RIDX_MAINTHREAD: lua_Integer = 1;
-pub const LUA_RIDX_GLOBALS: lua_Integer = 2;
+pub const LUAI_MAXSTACK: c_int = 65500; // XXX(LuaJIT)
+pub const LUA_REGISTRYINDEX: c_int = -10000; // XXX(LuaJIT)
+pub const LUA_GLOBALSINDEX: c_int = -10002; // XXX(LuaJIT)
+// XXX(LuaJIT): These aren't present
+//pub const LUA_RIDX_MAINTHREAD: lua_Integer = 1;
+//pub const LUA_RIDX_GLOBALS: lua_Integer = 2;
 pub const LUA_IDSIZE: c_int = 60;
 pub const LUA_MINSTACK: c_int = 20;
 // Not actually defined in lua.h / luaconf.h
@@ -200,6 +205,9 @@ extern "C" {
         level: c_int,
     );
     pub fn luaL_len(push_state: *mut lua_State, index: c_int) -> lua_Integer;
+
+    // XXX(LuaJIT): Need this to get globals
+    pub fn lua_getfield(L: *mut lua_State, idx: c_int, k: *const c_char);
 }
 
 // The following are re-implementations of what are macros in the Lua C API
